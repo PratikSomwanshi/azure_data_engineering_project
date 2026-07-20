@@ -1,0 +1,73 @@
+{
+	"name": "AZURE_SQL_INPUT",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AZURE_SQL_LS",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"table_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Branch_ID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Dealer_ID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Model_ID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Revenue",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Units_Sold",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Date_ID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Day",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Month",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Year",
+				"type": "nvarchar"
+			},
+			{
+				"name": "BranchName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "DealerName",
+				"type": "nvarchar"
+			},
+			{
+				"name": "Product_Name",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": {
+				"value": "@dataset().table_name",
+				"type": "Expression"
+			}
+		}
+	}
+}
