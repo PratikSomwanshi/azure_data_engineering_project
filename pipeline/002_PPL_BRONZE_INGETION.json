@@ -1,0 +1,137 @@
+{
+	"name": "002_PPL_BRONZE_INGETION",
+	"properties": {
+		"description": "Azure SQL DB TO ADLS",
+		"activities": [
+			{
+				"name": "Last Load Lookup",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select max(last_load) as max_load_date from dbo.watermark",
+						"queryTimeout": "00:12:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AZURE_SQL_INPUT",
+						"type": "DatasetReference",
+						"parameters": {
+							"table_name": "watermark"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Current Load Lookup",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select max(Date_ID) as max_data_available_date from dbo.raw_data",
+						"queryTimeout": "00:12:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "AZURE_SQL_INPUT",
+						"type": "DatasetReference",
+						"parameters": {
+							"table_name": "raw_data"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ASQL To ADLS Bronze",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Last Load Lookup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Current Load Lookup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat(\n    concat(\n    'select *\n    from dbo.raw_data\n    where \n    Date_ID > ''',\n    activity('Last Load Lookup').output.value[0].max_load_date,\n    ''''\n),\nconcat(\n    ' AND Date_ID < ''',\n    activity('Current Load Lookup').output.value[0].max_data_available_date,\n    ''''\n))",
+							"type": "Expression"
+						},
+						"queryTimeout": "00:12:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "AZURE_SQL_INPUT",
+						"type": "DatasetReference",
+						"parameters": {
+							"table_name": "raw_data"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ADLS_PATQUET_OUTPUT",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": []
+	}
+}
