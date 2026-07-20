@@ -1,0 +1,16 @@
+{
+	"name": "AZURE_SQL_OUTPUT",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AZURE_SQL_LS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "raw_data"
+		}
+	}
+}
